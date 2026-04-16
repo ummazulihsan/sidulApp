@@ -156,64 +156,146 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const URL_GAS = 'https://script.google.com/macros/s/AKfycbyczkHNYHIEN74llwc7oE63wEIqELWJRY6DopS9VI9Enit1R8KOAXp1tW3hG8cRA-9Y0Q/exec';
-
-        // Logika Form (doPost)
-        document.getElementById('formPengaduan').addEventListener('submit', function(e) {
+                // 2. DEFINISI ELEMEN
+        const form = document.getElementById('formPengaduan');
+        const fileInput = document.getElementById('inp-file');
+        const btnSubmit = document.getElementById('btn-kirim');
+        const notifForm = document.getElementById('notif-form');
+        const tabelBody = document.getElementById('tabel-body');
+        
+        // --- FUNGSI A: PENGIRIMAN DATA (TAB KIRIM ADUAN) ---
+        form.addEventListener('submit', function(e) {
             e.preventDefault();
-            const btn = document.getElementById('btn-kirim');
-            const notif = document.getElementById('notif-form');
-            btn.disabled = true;
-            notif.className = "alert alert-info mt-3";
-            notif.innerText = "Mengirim data ke database...";
-            notif.classList.remove('d-none');
-
-            const data = {
-                nama: document.getElementById('inp-nama').value,
-                kontak: document.getElementById('inp-kontak').value,
-                kategori: document.getElementById('inp-kategori').value,
-                isi: document.getElementById('inp-isi').value
-            };
-
-            fetch(URL_GAS, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) })
-            .then(() => {
-                notif.className = "alert alert-success mt-3";
-                notif.innerHTML = "<strong>Sukses!</strong> Aduan berhasil masuk sistem. Cek di tab Monitoring.";
-                this.reset();
-                btn.disabled = false;
-            }).catch(() => {
-                notif.className = "alert alert-danger mt-3";
-                notif.innerText = "Gagal terhubung ke server.";
-                btn.disabled = false;
-            });
+            
+            // Loading State
+            btnSubmit.disabled = true;
+            btnSubmit.innerText = "Sedang Memproses...";
+            notifForm.className = "alert alert-info mt-3";
+            notifForm.innerText = "Mohon tunggu, sedang mengupload laporan dan bukti...";
+            notifForm.classList.remove('d-none');
+        
+            const file = fileInput.files[0];
+        
+            // Jika ada file yang diunggah
+            if (file) {
+                const reader = new FileReader();
+                
+                // Callback setelah file selesai dibaca
+                reader.onload = function(event) {
+                    const payload = {
+                        nama: document.getElementById('inp-nama').value,
+                        kontak: document.getElementById('inp-kontak').value,
+                        kategori: document.getElementById('inp-kategori').value,
+                        isi: document.getElementById('inp-isi').value,
+                        fileData: event.target.result, // Data file dalam Base64
+                        fileName: file.name,
+                        fileType: file.type
+                    };
+                    eksekusiKirim(payload);
+                };
+                
+                // Error handling saat baca file
+                reader.onerror = function() {
+                    alert("Gagal membaca file bukti.");
+                    resetTombol();
+                };
+        
+                reader.readAsDataURL(file);
+            } else {
+                // Jika tidak ada file (laporan teks saja)
+                const payload = {
+                    nama: document.getElementById('inp-nama').value,
+                    kontak: document.getElementById('inp-kontak').value,
+                    kategori: document.getElementById('inp-kategori').value,
+                    isi: document.getElementById('inp-isi').value,
+                    fileData: null
+                };
+                eksekusiKirim(payload);
+            }
         });
-
-        // Logika Dashboard (doGet)
+        
+        // Fungsi untuk melakukan fetch POST ke Google Apps Script
+        function eksekusiKirim(payload) {
+            fetch(URL_GAS, {
+                method: 'POST',
+                mode: 'no-cors', // Penting untuk komunikasi dengan Google Script
+                body: JSON.stringify(payload)
+            })
+            .then(() => {
+                // Karena no-cors, kita tidak bisa baca JSON response, 
+                // tapi kita asumsikan sukses jika fetch tidak throw error.
+                notifForm.className = "alert alert-success mt-3";
+                notifForm.innerHTML = "<strong>Berhasil!</strong> Laporan Anda telah tersimpan ke sistem SiDul.";
+                form.reset();
+                resetTombol();
+            })
+            .catch(err => {
+                console.error("Error:", err);
+                notifForm.className = "alert alert-danger mt-3";
+                notifForm.innerText = "Terjadi kesalahan saat mengirim. Pastikan internet stabil.";
+                resetTombol();
+            });
+        }
+        
+        function resetTombol() {
+            btnSubmit.disabled = false;
+            btnSubmit.innerText = "KIRIM LAPORAN";
+        }
+        
+        
+        // --- FUNGSI B: MONITORING DATA (TAB DASHBOARD) ---
         async function ambilDataDashboard() {
-            const tbody = document.getElementById('tabel-body');
-            tbody.innerHTML = '<tr><td colspan="5" class="py-5 text-center"><div class="spinner-border text-primary" role="status"></div></td></tr>';
+            tabelBody.innerHTML = '<tr><td colspan="5" class="py-5 text-center"><div class="spinner-border text-primary" role="status"></div><br>Menghubungkan ke server BPS...</td></tr>';
+            
             try {
-                const res = await fetch(URL_GAS);
-                const hasil = await res.json();
-                tbody.innerHTML = '';
-                hasil.reverse().forEach(item => {
-                    const tgl = new Date(item.timestamp).toLocaleDateString('id-ID');
-                    let badgeColor = 'bg-baru';
-                    if(item.status.toLowerCase() === 'proses') badgeColor = 'bg-proses';
-                    if(item.status.toLowerCase() === 'selesai') badgeColor = 'bg-selesai';
-                    
-                    tbody.innerHTML += `
+                const response = await fetch(URL_GAS);
+                const data = await response.json();
+                
+                tabelBody.innerHTML = ''; // Bersihkan loading
+        
+                if (!data || data.length === 0) {
+                    tabelBody.innerHTML = '<tr><td colspan="5" class="py-5 text-center text-muted">Belum ada data pengaduan masuk.</td></tr>';
+                    return;
+                }
+        
+                // Urutkan dari yang terbaru (paling bawah di Sheets jadi paling atas di Web)
+                data.reverse().forEach(item => {
+                    const tgl = new Date(item.timestamp).toLocaleDateString('id-ID', {
+                        day: '2-digit', month: 'short', year: 'numeric'
+                    });
+        
+                    // Logika Warna Status sesuai tema BPS
+                    let badgeClass = 'bg-baru'; // Default
+                    const st = item.status.toLowerCase();
+                    if(st === 'proses') badgeClass = 'bg-proses';
+                    if(st === 'selesai') badgeClass = 'bg-selesai';
+        
+                    // Logika Link Bukti
+                    const linkBukti = (item.bukti && item.bukti !== "Tidak ada bukti") 
+                        ? `<a href="${item.bukti}" target="_blank" class="btn btn-sm btn-outline-secondary">📂 Lihat Bukti</a>` 
+                        : '<span class="text-muted small">Tanpa Bukti</span>';
+        
+                    const baris = `
                         <tr>
                             <td class="fw-bold ps-3">${item.reportId}</td>
                             <td>${tgl}</td>
                             <td><span class="badge text-dark border">${item.kategori}</span></td>
-                            <td class="text-muted">${item.isiAduan}</td>
-                            <td><span class="status-badge ${badgeColor}">${item.status}</span></td>
-                        </tr>`;
+                            <td>
+                                <div class="small fw-bold mb-1 text-truncate" style="max-width: 200px;">${item.isiAduan}</div>
+                                ${linkBukti}
+                            </td>
+                            <td><span class="status-badge ${badgeClass}">${item.status}</span></td>
+                        </tr>
+                    `;
+                    tabelBody.innerHTML += baris;
                 });
-            } catch (e) {
-                tbody.innerHTML = '<tr><td colspan="5" class="py-5 text-center text-danger">Gagal memuat data.</td></tr>';
+        
+            } catch (error) {
+                console.error("Dashboard Error:", error);
+                tabelBody.innerHTML = '<tr><td colspan="5" class="py-5 text-center text-danger">Gagal memuat dashboard. Pastikan Apps Script sudah di-deploy sebagai "Anyone".</td></tr>';
             }
         }
+      
     </script>
 </body>
 </html>
