@@ -6,86 +6,136 @@
     <title>SiDul - Sistem Informasi Pengaduan Layanan</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        :root { --primary-color: #003366; } /* Warna Navy khas Layanan Publik */
+        :root { --primary-color: #003366; }
         .navbar { background-color: var(--primary-color); }
+        .nav-link.active { background-color: rgba(255,255,255,0.2) !important; border-radius: 5px; }
         .btn-primary { background-color: var(--primary-color); border: none; }
         .btn-primary:hover { background-color: #002244; }
-        .hero-section { background: #f8f9fa; padding: 40px 0; border-bottom: 2px solid #dee2e6; }
+        .logo-img { height: 50px; margin-right: 15px; }
+        .status-badge { font-weight: bold; padding: 5px 10px; border-radius: 20px; }
+        .bg-pending { background-color: #ffc107; color: #000; }
+        .bg-proses { background-color: #17a2b8; color: #fff; }
+        .bg-selesai { background-color: #28a745; color: #fff; }
+        .bg-ditolak { background-color: #dc3545; color: #fff; }
     </style>
 </head>
 <body class="bg-light">
 
     <nav class="navbar navbar-dark shadow-sm">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="#">
-                🏢 SiDul
+            <a class="navbar-brand fw-bold d-flex align-items-center" href="#">
+                <img src="logo-sidul.png" alt="Logo SiDul" class="logo-img rounded">
+                <div>
+                    <span>SiDul</span><br>
+                    <small class="d-block d-md-none text-white-50">Monitoring & Pengaduan</small>
+                </div>
             </a>
-            <span class="navbar-text d-none d-md-block text-white">
+            <span class="navbar-text d-none d-md-block text-white fs-6">
                 Sistem Informasi Pengaduan Layanan
             </span>
         </div>
     </nav>
 
-    <div class="hero-section text-center">
-        <div class="container">
-            <h1 class="display-5 fw-bold">Sampaikan Keluhan Anda</h1>
-            <p class="lead">Layanan pengaduan masyarakat yang cepat, transparan, dan akuntabel.</p>
-        </div>
+    <div class="container mt-4">
+        <ul class="nav nav-pills justify-content-center bg-white p-2 rounded shadow-sm">
+            <li class="nav-item">
+                <a class="nav-link active" id="pills-form-tab" data-bs-toggle="pill" href="#pills-form">Kirim Aduan</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="pills-dash-tab" data-bs-toggle="pill" href="#pills-dash" onclick="loadDashboard()">Dashboard Monitoring</a>
+            </li>
+        </ul>
     </div>
 
-    <div class="container py-5">
-        <div class="row justify-content-center">
-            <div class="col-md-7">
+    <div class="tab-content" id="pills-tabContent">
+        
+        <div class="tab-pane fade show active" id="pills-form">
+            <div class="container py-4">
+                <div class="row justify-content-center">
+                    <div class="col-md-7">
+                        <div class="card shadow border-0">
+                            <div class="card-body p-4">
+                                <h4 class="mb-4 text-center">Formulir Pengaduan Warga</h4>
+                                <form id="formSiDul">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold">Nama Pelapor</label>
+                                            <input type="text" id="nama" class="form-control" placeholder="Nama lengkap" required>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold">Kontak (WA/Email)</label>
+                                            <input type="text" id="kontak" class="form-control" placeholder="0812..." required>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Kategori Layanan</label>
+                                        <select id="kategori" class="form-select">
+                                            <option value="Kebersihan">Kebersihan Lingkungan</option>
+                                            <option value="Infrastruktur">Infrastruktur & Jalan</option>
+                                            <option value="Kesehatan">Layanan Kesehatan</option>
+                                            <option value="Administrasi">Administrasi Kependudukan</option>
+                                            <option value="Lainnya">Lainnya</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Isi Aduan</label>
+                                        <textarea id="isi" class="form-control" rows="5" placeholder="Ceritakan detail persoalan..." required></textarea>
+                                    </div>
+                                    <div class="d-grid gap-2">
+                                        <button type="submit" id="btnSubmit" class="btn btn-primary btn-lg">Kirim Aduan Sekarang</button>
+                                    </div>
+                                </form>
+                                <div id="statusMessage" class="mt-4 text-center d-none"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="pills-dash">
+            <div class="container py-4">
                 <div class="card shadow border-0">
                     <div class="card-body p-4">
-                        <form id="formSiDul">
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">Nama Pelapor</label>
-                                    <input type="text" id="nama" class="form-control" placeholder="Nama lengkap" required>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">Kontak (WA/Email)</label>
-                                    <input type="text" id="kontak" class="form-control" placeholder="0812..." required>
-                                </div>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Kategori Layanan</label>
-                                <select id="kategori" class="form-select">
-                                    <option value="Kebersihan">Kebersihan Lingkungan</option>
-                                    <option value="Infrastruktur">Infrastruktur & Jalan</option>
-                                    <option value="Kesehatan">Layanan Kesehatan</option>
-                                    <option value="Administrasi">Administrasi Kependudukan</option>
-                                    <option value="Lainnya">Lainnya</option>
-                                </select>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Isi Aduan</label>
-                                <textarea id="isi" class="form-control" rows="5" placeholder="Ceritakan detail persoalan..." required></textarea>
-                            </div>
-
-                            <div class="d-grid gap-2">
-                                <button type="submit" id="btnSubmit" class="btn btn-primary btn-lg">Kirim Aduan Sekarang</button>
-                            </div>
-                        </form>
-                        <div id="statusMessage" class="mt-4 text-center d-none"></div>
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h4>Dashboard Monitoring Publik</h4>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="loadDashboard()">
+                                🔄 Segarkan Data
+                            </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover align-middle">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>ID Laporan</th>
+                                        <th>Tanggal</th>
+                                        <th>Kategori</th>
+                                        <th>Isi Aduan (Ringkas)</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dashboardBody">
+                                    <tr><td colspan="5" class="text-center text-muted">Sedang memuat data...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <footer class="text-center py-4 text-muted">
-        <small>&copy; 2024 SiDul - Pemerintah Kota/Kabupaten. Seluruh data dilindungi.</small>
+    <footer class="text-center py-4 mt-5 text-muted border-top">
+        <small>&copy; 2026 SiDul - BPS Provinsi Kep. Bangka Belitung. Seluruh data dilindungi.</small>
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const scriptURL = 'https://script.google.com/macros/s/AKfycbzskb8XMKUY_4JasQh8FPriOm8OqyWhNHnQQq7CDT-O7JBvVh7qESIDijjoCdATemKJ7A/exec';
         const form = document.getElementById('formSiDul');
         const btnSubmit = document.getElementById('btnSubmit');
 
+        // LOGIKA SEND (doPost)
         form.addEventListener('submit', e => {
             e.preventDefault();
             btnSubmit.disabled = true;
@@ -101,22 +151,61 @@
                 isi: document.getElementById('isi').value
             };
 
-            fetch(scriptURL, { method: 'POST', body: JSON.stringify(payload) })
-            .then(res => res.json())
-            .then(response => {
-                if(response.status === 'success') {
-                    msg.className = "mt-4 text-center alert alert-success";
-                    msg.innerHTML = `<h5>Laporan Berhasil Diterima!</h5>ID Laporan: <strong>${response.id}</strong><br>Mohon simpan ID ini untuk melacak status aduan.`;
-                    form.reset();
-                }
+            fetch(scriptURL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) })
+            .then(() => {
+                msg.className = "mt-4 text-center alert alert-success";
+                msg.innerHTML = `<h5>Laporan Terkirim!</h5>Mohon cek Dashboard untuk memantau status.<br><small class="text-muted">(Catatan: ID unik sedang diproses admin di database)</small>`;
+                form.reset();
                 btnSubmit.disabled = false;
             })
             .catch(error => {
                 msg.className = "mt-4 text-center alert alert-danger";
-                msg.textContent = "Maaf, terjadi kendala teknis. Mohon coba lagi.";
+                msg.textContent = "Terjadi kendala teknis. Mohon coba lagi.";
                 btnSubmit.disabled = false;
             });
         });
+
+        // LOGIKA GET (doGet) untuk Dashboard
+        async function loadDashboard() {
+            const tableBody = document.getElementById('dashboardBody');
+            tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Sedang memuat data terbaru...</td></tr>';
+            
+            try {
+                const response = await fetch(scriptURL);
+                const data = await response.json();
+                
+                tableBody.innerHTML = ''; // Hapus pesan 'loading'
+                
+                if (data.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Belum ada laporan masuk.</td></tr>';
+                    return;
+                }
+                
+                // Balik urutan agar laporan terbaru di atas
+                data.reverse().forEach(adu => {
+                    // Format tanggal
+                    const tgl = new Date(adu.timestamp);
+                    const tglStr = `${tgl.getDate()}/${tgl.getMonth()+1}/${tgl.getFullYear()}`;
+                    
+                    const statusClass = adu.status.toLowerCase().replace(" ", "");
+                    
+                    const row = `
+                        <tr>
+                            <td class="fw-bold text-primary">${adu.reportId}</td>
+                            <td>${tglStr}</td>
+                            <td>${adu.kategori}</td>
+                            <td>${adu.isiAduan}</td>
+                            <td><span class="status-badge bg-${statusClass}">${adu.status}</span></td>
+                        </tr>
+                    `;
+                    tableBody.innerHTML += row;
+                });
+                
+            } catch (error) {
+                console.error("Gagal load dashboard:", error);
+                tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Gagal memuat data. Periksa koneksi atau deployment Apps Script.</td></tr>';
+            }
+        }
     </script>
 </body>
 </html>
