@@ -167,52 +167,51 @@
         form.addEventListener('submit', function(e) {
             e.preventDefault();
             
-            // Loading State
-            btnSubmit.disabled = true;
-            btnSubmit.innerText = "Sedang Memproses...";
-            notifForm.className = "alert alert-info mt-3";
-            notifForm.innerText = "Mohon tunggu, sedang mengupload laporan dan bukti...";
-            notifForm.classList.remove('d-none');
-        
-            const file = fileInput.files[0];
-        
-            // Jika ada file yang diunggah
-            if (file) {
+                        // 1. AMBIL NILAI INPUT
+                const nama = document.getElementById('inp-nama').value.trim();
+                const kontak = document.getElementById('inp-kontak').value.trim();
+                const kategori = document.getElementById('inp-kategori').value;
+                const isi = document.getElementById('inp-isi').value.trim();
+                const file = fileInput.files[0];
+            
+                // 2. VALIDASI: CEK JIKA ADA KOLOM KOSONG
+                if (!nama || !kontak || !kategori || !isi || !file) {
+                    notifForm.className = "alert alert-warning mt-3 d-block";
+                    notifForm.innerHTML = "<strong>Peringatan!</strong> Semua kolom dan bukti otentik wajib diisi/diupload.";
+                    
+                    // Memberi efek getar/fokus ke bagian yang kosong (opsional)
+                    window.scrollTo(0, 0); 
+                    return; // BERHENTI DI SINI, tidak lanjut submit
+                }
+            
+                // 3. JIKA LOLOS VALIDASI, LANJUTKAN PROSES
+                btnSubmit.disabled = true;
+                btnSubmit.innerText = "Sedang Memproses...";
+                notifForm.className = "alert alert-info mt-3";
+                notifForm.innerText = "Mohon tunggu, sedang mengupload laporan dan bukti...";
+                notifForm.classList.remove('d-none');
+            
                 const reader = new FileReader();
-                
-                // Callback setelah file selesai dibaca
                 reader.onload = function(event) {
                     const payload = {
-                        nama: document.getElementById('inp-nama').value,
-                        kontak: document.getElementById('inp-kontak').value,
-                        kategori: document.getElementById('inp-kategori').value,
-                        isi: document.getElementById('inp-isi').value,
-                        fileData: event.target.result, // Data file dalam Base64
+                        nama: nama,
+                        kontak: kontak,
+                        kategori: kategori,
+                        isi: isi,
+                        fileData: event.target.result,
                         fileName: file.name,
                         fileType: file.type
                     };
                     eksekusiKirim(payload);
                 };
                 
-                // Error handling saat baca file
                 reader.onerror = function() {
                     alert("Gagal membaca file bukti.");
                     resetTombol();
                 };
-        
+            
                 reader.readAsDataURL(file);
-            } else {
-                // Jika tidak ada file (laporan teks saja)
-                const payload = {
-                    nama: document.getElementById('inp-nama').value,
-                    kontak: document.getElementById('inp-kontak').value,
-                    kategori: document.getElementById('inp-kategori').value,
-                    isi: document.getElementById('inp-isi').value,
-                    fileData: null
-                };
-                eksekusiKirim(payload);
-            }
-        });
+            });
         
         // Fungsi untuk melakukan fetch POST ke Google Apps Script
         function eksekusiKirim(payload) {
