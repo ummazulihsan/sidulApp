@@ -3,298 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SiDul - Sistem Informasi Pengaduan Layanan</title>
+    <title>Form Input Pengaduan</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        /* PALET WARNA BPS */
-        :root { 
-            --bps-blue: #043277;    /* Biru Utama BPS */
-            --bps-orange: #F7941D;  /* Oranye BPS */
-            --bps-green: #00A651;   /* Hijau BPS */
-            --bps-light-blue: #0072BC; 
-            --background: #f4f7fa;
-        }
-
-        body { background-color: var(--background); font-family: 'Inter', sans-serif; }
-        
-        /* Navbar dengan Biru BPS */
-        .navbar { background-color: var(--bps-blue); border-bottom: 4px solid var(--bps-orange); }
-        .logo-img { height: 55px; width: 55px; border: 2px solid #fff; }
-
-        /* Nav Pills / Tab dengan aksen Oranye BPS */
-        .nav-pills .nav-link { color: var(--bps-blue); font-weight: 600; }
-        .nav-pills .nav-link.active { 
-            background-color: var(--bps-orange) !important; 
-            color: white !important;
-            box-shadow: 0 4px 10px rgba(247, 148, 29, 0.3);
-        }
-        
-        /* Tombol Utama */
-        .btn-primary { background-color: var(--bps-blue); border: none; }
-        .btn-primary:hover { background-color: var(--bps-light-blue); }
-
-        /* Status Badge */
-        .status-badge { font-size: 0.75rem; padding: 5px 12px; border-radius: 4px; font-weight: 700; }
-        .bg-baru { background-color: #dee2e6; color: #495057; }
-        .bg-proses { background-color: #fff4e5; color: var(--bps-orange); border: 1px solid var(--bps-orange); }
-        .bg-selesai { background-color: #e6f6ee; color: var(--bps-green); border: 1px solid var(--bps-green); }
-
-        /* Table Header */
-        .table-bps { background-color: var(--bps-blue); color: white; }
-        .card { border-radius: 8px; border: none; }
-    </style>
 </head>
-<body>
-
-    <nav class="navbar navbar-dark shadow-sm">
-        <div class="container py-1">
-            <a class="navbar-brand d-flex align-items-center" href="#">
-                <img src="logo_sidulApp.jpeg" alt="Logo SiDul" class="logo-img rounded-circle me-3">
-                <div>
-                    <h4 class="fw-bold mb-0">SiDul - Sistem Informasi Pengaduan Layanan</h4>
-                    <small class="text-white-50">Transparansi Pengaduan dalam Genggaman Data</small>
-                </div>
-            </a>
-        </div>
-    </nav>
-
-    <div class="container mt-4">
-        <ul class="nav nav-pills justify-content-center mb-4" id="pills-tab" role="tablist">
-            <li class="nav-item">
-                <button class="nav-link active px-4" id="tab-kirim" data-bs-toggle="pill" data-bs-target="#content-kirim" type="button">
-                    📩 BUAT ADUAN
-                </button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link px-4" id="tab-dashboard" data-bs-toggle="pill" data-bs-target="#content-dashboard" type="button" onclick="ambilDataDashboard()">
-                    📊 MONITORING DATA
-                </button>
-            </li>
-        </ul>
-
-        <div class="tab-content">
-            <div class="tab-pane fade show active" id="content-kirim">
-                <div class="row justify-content-center">
-                    <div class="col-md-8">
-                        <div class="card shadow-sm">
-                            <div class="card-body p-4">
-                                <h5 class="text-center mb-4 fw-bold" style="color: var(--bps-blue)">Formulir Layanan Pengaduan</h5>
-                                <form id="formPengaduan">
-                                    <div class="row g-3">
-                                        <div class="col-md-6">
-                                            <label class="form-label">Nama Lengkap</label>
-                                            <input type="text" id="inp-nama" class="form-control shadow-sm" required>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label">Kontak (WA/Email)</label>
-                                            <input type="text" id="inp-kontak" class="form-control shadow-sm" required>
-                                        </div>
-                                        <div class="col-12">
-                                            <label class="form-label">Kategori Laporan</label>
-                                            <select id="inp-kategori" class="form-select shadow-sm">
-                                                <option value="Data & Statistik">Fraud</option>
-                                                <option value="Infrastruktur">Kepegawaian</option>
-                                                <option value="Infrastruktur">Konflik Kepentingan</option>
-                                                <option value="Pelayanan">Pelayanan Statistik</option>
-                                                <option value="Lainnya">Lainnya</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-12">
-                                            <label class="form-label">Deskripsi Aduan</label>
-                                            <textarea id="inp-isi" class="form-control shadow-sm" rows="4" required></textarea>
-                                        </div>
-                                        <div class="col-12 mb-3">
-                                            <label class="form-label fw-bold" style="color: var(--bps-blue)">Upload Bukti Otentik (PDF/JPG/PNG)</label>
-                                            <input type="file" id="inp-file" class="form-control shadow-sm" accept="image/*,.pdf">
-                                            <small class="text-muted">Maksimal ukuran file: 5MB</small>
-                                        </div>
-                                        <div class="col-12 text-end">
-                                            <button type="submit" id="btn-kirim" class="btn btn-primary px-5 py-2 fw-bold">KIRIM LAPORAN</button>
-                                        </div>
-                                    </div>
-                                </form>
-                                <div id="notif-form" class="mt-3 d-none"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+<body class="bg-light py-5">
+    <div class="container" style="max-width: 600px;">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-primary text-white text-center py-3">
+                <h4 class="mb-0">Form Pengaduan Publik</h4>
             </div>
+            <div class="card-body p-4">
 
-            <div class="tab-pane fade" id="content-dashboard">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-white py-3 d-flex justify-content-between">
-                        <h5 class="mb-0 fw-bold" style="color: var(--bps-blue)">Dashboard Transparansi Aduan</h5>
-                        <button class="btn btn-sm btn-outline-primary" onclick="ambilDataDashboard()">Segarkan Data</button>
+                <div id="alertBox"></div>
+
+                <form id="formPengaduan">
+                    <div class="mb-3">
+                        <label class="form-label">Nama Pelapor <span class="text-danger">*</span></label>
+                        <input type="text" id="nama_pelapor" class="form-control" required placeholder="Masukkan nama lengkap">
                     </div>
-                    <div class="card-body p-0 text-center">
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="table-bps text-uppercase small">
-                                    <tr>
-                                        <th class="py-3">ID Laporan</th>
-                                        <th>Tanggal</th>
-                                        <th>Kategori</th>
-                                        <th>Ringkasan</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tabel-body" class="small text-start">
-                                    <tr><td colspan="5" class="py-5 text-center">Klik 'Segarkan Data' untuk memuat...</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Kontak (No HP / WA / Email) <span class="text-danger">*</span></label>
+                        <input type="text" id="kontak" class="form-control" required placeholder="Contoh: 08123456789">
                     </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Kategori <span class="text-danger">*</span></label>
+                        <select id="kategori" class="form-select" required>
+                            <option value="Pelayanan Umum">Pelayanan Umum</option>
+                            <option value="Layanan Statistik">Layanan Statistik</option>
+                            <option value="Infrastruktur & Sarana">Infrastruktur & Sarana</option>
+                            <option value="Lainnya">Lainnya</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Isi Pengaduan <span class="text-danger">*</span></label>
+                        <textarea id="isi_pengaduan" class="form-control" rows="4" required placeholder="Jelaskan detail pengaduan kamu..."></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Link Bukti (Opsional)</label>
+                        <input type="url" id="link_bukti" class="form-control" placeholder="Contoh: Link Google Drive / Foto">
+                    </div>
+
+                    <button type="submit" id="btnSubmit" class="btn btn-primary w-100 py-2 fs-5">Kirim Pengaduan</button>
+                </form>
+
+                <div class="text-center mt-3">
+                    <a href="admin.html" class="text-decoration-none">&larr; Masuk ke Halaman Admin</a>
                 </div>
             </div>
         </div>
     </div>
 
-    <footer class="text-center py-4 mt-5">
-        <p class="text-muted small">© 2026 SiDul - BPS Provinsi Kepulauan Bangka Belitung</p>
-    </footer>
+<script>
+    // MASUKKAN URL GOOGLE APPS SCRIPT KAMU DI SINI
+    const API_URL = "https://script.google.com/macros/s/AKfycbxAoO3vUJ5FLCyR1zMH3iau5a9MdQFwuZ8dXuKtowzBjY8Pm67TVq5g6euCw6xIdadrCA/exec";
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        const URL_GAS = 'https://script.google.com/macros/s/AKfycbyczkHNYHIEN74llwc7oE63wEIqELWJRY6DopS9VI9Enit1R8KOAXp1tW3hG8cRA-9Y0Q/exec';
-                // 2. DEFINISI ELEMEN
-        const form = document.getElementById('formPengaduan');
-        const fileInput = document.getElementById('inp-file');
-        const btnSubmit = document.getElementById('btn-kirim');
-        const notifForm = document.getElementById('notif-form');
-        const tabelBody = document.getElementById('tabel-body');
-        
-        // --- FUNGSI A: PENGIRIMAN DATA (TAB KIRIM ADUAN) ---
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-                        // 1. AMBIL NILAI INPUT
-                const nama = document.getElementById('inp-nama').value.trim();
-                const kontak = document.getElementById('inp-kontak').value.trim();
-                const kategori = document.getElementById('inp-kategori').value;
-                const isi = document.getElementById('inp-isi').value.trim();
-                const file = fileInput.files[0];
-            
-                // 2. VALIDASI: CEK JIKA ADA KOLOM KOSONG
-                if (!nama || !kontak || !kategori || !isi || !file) {
-                    notifForm.className = "alert alert-warning mt-3 d-block";
-                    notifForm.innerHTML = "<strong>Peringatan!</strong> Semua kolom dan bukti otentik wajib diisi/diupload.";
-                    
-                    // Memberi efek getar/fokus ke bagian yang kosong (opsional)
-                    window.scrollTo(0, 0); 
-                    return; // BERHENTI DI SINI, tidak lanjut submit
-                }
-            
-                // 3. JIKA LOLOS VALIDASI, LANJUTKAN PROSES
-                btnSubmit.disabled = true;
-                btnSubmit.innerText = "Sedang Memproses...";
-                notifForm.className = "alert alert-info mt-3";
-                notifForm.innerText = "Mohon tunggu, sedang mengupload laporan dan bukti...";
-                notifForm.classList.remove('d-none');
-            
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    const payload = {
-                        nama: nama,
-                        kontak: kontak,
-                        kategori: kategori,
-                        isi: isi,
-                        fileData: event.target.result,
-                        fileName: file.name,
-                        fileType: file.type
-                    };
-                    eksekusiKirim(payload);
-                };
-                
-                reader.onerror = function() {
-                    alert("Gagal membaca file bukti.");
-                    resetTombol();
-                };
-            
-                reader.readAsDataURL(file);
-            });
-        
-        // Fungsi untuk melakukan fetch POST ke Google Apps Script
-        function eksekusiKirim(payload) {
-            fetch(URL_GAS, {
+    document.getElementById('formPengaduan').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const btnSubmit = document.getElementById('btnSubmit');
+        btnSubmit.disabled = true;
+        btnSubmit.innerText = 'Mengirim...';
+
+        const payload = {
+            action: "create",
+            nama_pelapor: document.getElementById('nama_pelapor').value,
+            kontak: document.getElementById('kontak').value,
+            kategori: document.getElementById('kategori').value,
+            isi_pengaduan: document.getElementById('isi_pengaduan').value,
+            link_bukti: document.getElementById('link_bukti').value
+        };
+
+        try {
+            await fetch(API_URL, {
                 method: 'POST',
-                mode: 'no-cors', // Penting untuk komunikasi dengan Google Script
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
-            })
-            .then(() => {
-                // Karena no-cors, kita tidak bisa baca JSON response, 
-                // tapi kita asumsikan sukses jika fetch tidak throw error.
-                notifForm.className = "alert alert-success mt-3";
-                notifForm.innerHTML = "<strong>Berhasil!</strong> Laporan Anda telah tersimpan ke sistem SiDul.";
-                form.reset();
-                resetTombol();
-            })
-            .catch(err => {
-                console.error("Error:", err);
-                notifForm.className = "alert alert-danger mt-3";
-                notifForm.innerText = "Terjadi kesalahan saat mengirim. Pastikan internet stabil.";
-                resetTombol();
             });
-        }
-        
-        function resetTombol() {
+
+            document.getElementById('alertBox').innerHTML = `<div class="alert alert-success">Pengaduan berhasil terkirim dan tercatat di sistem!</div>`;
+            document.getElementById('formPengaduan').reset();
+        } catch(err) {
+            document.getElementById('alertBox').innerHTML = `<div class="alert alert-danger">Gagal mengirim pengaduan.</div>`;
+        } finally {
             btnSubmit.disabled = false;
-            btnSubmit.innerText = "KIRIM LAPORAN";
+            btnSubmit.innerText = 'Kirim Pengaduan';
         }
-        
-        
-        // --- FUNGSI B: MONITORING DATA (TAB DASHBOARD) ---
-        async function ambilDataDashboard() {
-            tabelBody.innerHTML = '<tr><td colspan="5" class="py-5 text-center"><div class="spinner-border text-primary" role="status"></div><br>Menghubungkan ke server BPS...</td></tr>';
-            
-            try {
-                const response = await fetch(URL_GAS);
-                const data = await response.json();
-                
-                tabelBody.innerHTML = ''; // Bersihkan loading
-        
-                if (!data || data.length === 0) {
-                    tabelBody.innerHTML = '<tr><td colspan="5" class="py-5 text-center text-muted">Belum ada data pengaduan masuk.</td></tr>';
-                    return;
-                }
-        
-                // Urutkan dari yang terbaru (paling bawah di Sheets jadi paling atas di Web)
-                data.reverse().forEach(item => {
-                    const tgl = new Date(item.timestamp).toLocaleDateString('id-ID', {
-                        day: '2-digit', month: 'short', year: 'numeric'
-                    });
-        
-                    // Logika Warna Status sesuai tema BPS
-                    let badgeClass = 'bg-baru'; // Default
-                    const st = item.status.toLowerCase();
-                    if(st === 'proses') badgeClass = 'bg-proses';
-                    if(st === 'selesai') badgeClass = 'bg-selesai';
-        
-                    // Logika Link Bukti
-                    const linkBukti = (item.bukti && item.bukti !== "Tidak ada bukti") 
-                        ? `<a href="${item.bukti}" target="_blank" class="btn btn-sm btn-outline-secondary">📂 Lihat Bukti</a>` 
-                        : '<span class="text-muted small">Tanpa Bukti</span>';
-        
-                    const baris = `
-                        <tr>
-                            <td class="fw-bold ps-3">${item.reportId}</td>
-                            <td>${tgl}</td>
-                            <td><span class="badge text-dark border">${item.kategori}</span></td>
-                            <td>
-                                <div class="small fw-bold mb-1 text-truncate" style="max-width: 200px;">${item.isiAduan}</div>
-                                ${linkBukti}
-                            </td>
-                            <td><span class="status-badge ${badgeClass}">${item.status}</span></td>
-                        </tr>
-                    `;
-                    tabelBody.innerHTML += baris;
-                });
-        
-            } catch (error) {
-                console.error("Dashboard Error:", error);
-                tabelBody.innerHTML = '<tr><td colspan="5" class="py-5 text-center text-danger">Gagal memuat dashboard. Pastikan Apps Script sudah di-deploy sebagai "Anyone".</td></tr>';
-            }
-        }
-      
-    </script>
+    });
+</script>
 </body>
 </html>
