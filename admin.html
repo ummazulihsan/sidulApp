@@ -3,40 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - SiDul BPS</title>
+    <title>Dashboard Admin - SiDul BPS</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        :root { --bps-blue: #043277; }
-        .bg-bps { background-color: var(--bps-blue); }
+        :root { 
+            --bps-blue: #043277; 
+            --bps-orange: #F7941D;
+            --bps-green: #00A651;
+            --background: #f4f7fa;
+        }
+
+        body { background-color: var(--background); font-family: 'Inter', sans-serif; }
+        .navbar { background-color: var(--bps-blue); border-bottom: 4px solid var(--bps-orange); }
+        .logo-img { height: 45px; width: 45px; border: 2px solid #fff; }
+
+        .status-badge { font-size: 0.75rem; padding: 5px 12px; border-radius: 4px; font-weight: 700; }
+        .bg-baru { background-color: #dee2e6; color: #495057; }
+        .bg-proses { background-color: #fff4e5; color: var(--bps-orange); border: 1px solid var(--bps-orange); }
+        .bg-selesai { background-color: #e6f6ee; color: var(--bps-green); border: 1px solid var(--bps-green); }
+
+        .table-bps { background-color: var(--bps-blue); color: white; }
     </style>
 </head>
-<body class="bg-light p-4">
+<body>
 
-    <div class="container-fluid">
-        <div class="d-flex justify-content-between align-items-center mb-4 p-3 bg-bps text-white rounded shadow-sm">
-            <h3 class="mb-0 fw-bold">Panel Admin SiDul BPS</h3>
-            <a href="index.html" class="btn btn-outline-light btn-sm">&larr; Ke Halaman Publik</a>
+    <nav class="navbar navbar-dark shadow-sm">
+        <div class="container py-1">
+            <a class="navbar-brand d-flex align-items-center" href="#">
+                <img src="logo_sidulApp.jpeg" alt="Logo SiDul" class="logo-img rounded-circle me-3">
+                <h5 class="fw-bold mb-0">Admin Panel - SiDul BPS</h5>
+            </a>
+            <a href="index.html" class="btn btn-outline-light btn-sm">&larr; Ke Form Pengaduan</a>
         </div>
+    </nav>
 
-        <div class="card shadow-sm border-0">
-            <div class="card-body">
+    <div class="container mt-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold" style="color: var(--bps-blue)">📊 Dashboard Monitoring Data Pengaduan</h5>
+                <button class="btn btn-sm btn-outline-primary" onclick="ambilDataDashboard()">Segarkan Data</button>
+            </div>
+            <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-bordered table-hover align-middle">
-                        <thead class="table-dark text-center">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-bps text-uppercase small text-center">
                             <tr>
-                                <th>No</th>
+                                <th class="py-3">ID Laporan</th>
                                 <th>Tanggal</th>
-                                <th>ID Laporan</th>
-                                <th>Nama Pelapor</th>
-                                <th>Kontak</th>
                                 <th>Kategori</th>
-                                <th>Isi Pengaduan</th>
-                                <th>Bukti</th>
+                                <th>Ringkasan Pengaduan</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
-                        <tbody id="adminTabel">
-                            <tr><td colspan="9" class="text-center py-4">Memuat data pengaduan...</td></tr>
+                        <tbody id="tabel-body" class="small text-start">
+                            <tr><td colspan="5" class="py-5 text-center">Memuat data pengaduan...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -44,46 +64,64 @@
         </div>
     </div>
 
+    <footer class="text-center py-4 mt-5">
+        <p class="text-muted small">© 2026 SiDul - BPS Provinsi Kepulauan Bangka Belitung</p>
+    </footer>
+
     <script>
         const URL_GAS = 'https://script.google.com/macros/s/AKfycbyczkHNYHIEN74llwc7oE63wEIqELWJRY6DopS9VI9Enit1R8KOAXp1tW3hG8cRA-9Y0Q/exec';
+        const tabelBody = document.getElementById('tabel-body');
 
-        async function loadAdminData() {
+        async function ambilDataDashboard() {
+            tabelBody.innerHTML = '<tr><td colspan="5" class="py-5 text-center"><div class="spinner-border text-primary" role="status"></div><br>Menghubungkan ke server BPS...</td></tr>';
+            
             try {
-                const res = await fetch(URL_GAS);
-                const data = await res.json();
-                const tbody = document.getElementById('adminTabel');
-                tbody.innerHTML = '';
-
-                if(data.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="9" class="text-center">Belum ada pengaduan.</td></tr>`;
+                const response = await fetch(URL_GAS);
+                const data = await response.json();
+                
+                tabelBody.innerHTML = '';
+                
+                if (!data || data.length === 0) {
+                    tabelBody.innerHTML = '<tr><td colspan="5" class="py-5 text-center text-muted">Belum ada data pengaduan masuk.</td></tr>';
                     return;
                 }
+                
+                data.reverse().forEach(item => {
+                    const tgl = new Date(item.timestamp).toLocaleDateString('id-ID', {
+                        day: '2-digit', month: 'short', year: 'numeric'
+                    });
+                    
+                    let badgeClass = 'bg-baru';
+                    const st = item.status ? item.status.toLowerCase() : '';
+                    if(st === 'proses') badgeClass = 'bg-proses';
+                    if(st === 'selesai') badgeClass = 'bg-selesai';
+                    
+                    const linkBukti = (item.bukti && item.bukti !== "Tidak ada bukti") 
+                        ? `<a href="${item.bukti}" target="_blank" class="btn btn-sm btn-outline-secondary mt-1">📂 Lihat Bukti</a>` 
+                        : '<span class="text-muted small d-block mt-1">Tanpa Bukti</span>';
 
-                data.forEach((item, index) => {
-                    const tgl = new Date(item.timestamp).toLocaleString('id-ID');
-                    const link = (item.bukti && item.bukti !== "Tidak ada bukti") 
-                        ? `<a href="${item.bukti}" target="_blank" class="btn btn-sm btn-outline-info">Buka File</a>` : '-';
-
-                    tbody.innerHTML += `
+                    const baris = `
                         <tr>
-                            <td class="text-center">${index + 1}</td>
-                            <td><small>${tgl}</small></td>
-                            <td><span class="badge bg-secondary">${item.reportId}</span></td>
-                            <td><strong>${item.nama_pelapor || '-'}</strong></td>
-                            <td>${item.kontak || '-'}</td>
-                            <td><span class="badge bg-primary">${item.kategori}</span></td>
-                            <td>${item.isiAduan}</td>
-                            <td class="text-center">${link}</td>
-                            <td class="text-center fw-bold">${item.status}</td>
+                            <td class="fw-bold ps-3 text-center">${item.reportId}</td>
+                            <td class="text-center">${tgl}</td>
+                            <td><span class="badge text-dark border">${item.kategori}</span></td>
+                            <td>
+                                <div class="small fw-bold mb-1">${item.isiAduan}</div>
+                                ${linkBukti}
+                            </td>
+                            <td class="text-center"><span class="status-badge ${badgeClass}">${item.status || 'Menunggu'}</span></td>
                         </tr>
                     `;
+                    tabelBody.innerHTML += baris;
                 });
-            } catch(e) {
-                console.error(e);
+
+            } catch (error) {
+                console.error("Dashboard Error:", error);
+                tabelBody.innerHTML = '<tr><td colspan="5" class="py-5 text-center text-danger">Gagal memuat dashboard. Pastikan Apps Script sudah di-deploy sebagai "Anyone".</td></tr>';
             }
         }
 
-        window.onload = loadAdminData;
+        window.onload = ambilDataDashboard;
     </script>
 </body>
 </html>
