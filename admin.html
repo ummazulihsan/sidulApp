@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register Pengaduan - Admin</title>
+    <title>Dashboard Admin - Pengaduan</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light p-4">
@@ -29,10 +29,10 @@
         </div>
     </div>
 
-    <!-- HALAMAN REGISTER ADMIN -->
+    <!-- REGISTER DASHBOARD -->
     <div class="container-fluid d-none" id="adminContent">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>Database Pengaduan (Google Sheets)</h2>
+            <h2>Register Database Pengaduan</h2>
             <div>
                 <a href="index.html" class="btn btn-outline-secondary me-2">&larr; Ke Form Public</a>
                 <button onclick="logout()" class="btn btn-danger">Logout</button>
@@ -46,13 +46,13 @@
                         <thead class="table-dark text-center">
                             <tr>
                                 <th>No</th>
-                                <th>Petugas</th>
-                                <th>Tanggal & Pelapor</th>
-                                <th>Judul & Isi Laporan</th>
-                                <th>Sumber / Kategori</th>
-                                <th>Bukti</th>
-                                <th>Tindak Lanjut</th>
-                                <th>Status SP4N</th>
+                                <th>Timestamp</th>
+                                <th>ID Laporan</th>
+                                <th>Nama Pelapor</th>
+                                <th>Kontak</th>
+                                <th>Kategori</th>
+                                <th>Isi Pengaduan</th>
+                                <th>Link Bukti</th>
                                 <th>Status</th>
                                 <th>Aksi</th>
                             </tr>
@@ -66,41 +66,25 @@
         </div>
     </div>
 
-    <!-- MODAL TINDAK LANJUT -->
+    <!-- MODAL EDIT STATUS -->
     <div class="modal fade" id="editModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title">Proses Pengaduan</h5>
+                    <h5 class="modal-title">Update Status Pengaduan</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="formTindakLanjut">
+                    <form id="formStatus">
                         <input type="hidden" id="editId">
                         <div class="mb-3">
-                            <label class="form-label">Nama Petugas Pengaduan <span class="text-danger">*</span></label>
-                            <input type="text" id="editPetugas" class="form-control" required placeholder="Misal: Listia">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Keterangan Tindak Lanjut <span class="text-danger">*</span></label>
-                            <textarea id="editTindakLanjut" class="form-control" rows="3" required></textarea>
-                        </div>
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Status SP4N</label>
-                                <select id="editSp4n" class="form-select">
-                                    <option value="Belum Entri">Belum Entri</option>
-                                    <option value="Sudah Entri">Sudah Entri</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Status Laporan</label>
-                                <select id="editStatus" class="form-select">
-                                    <option value="Menunggu">Menunggu</option>
-                                    <option value="Diproses">Diproses</option>
-                                    <option value="Selesai">Selesai</option>
-                                </select>
-                            </div>
+                            <label class="form-label">Pilih Status Baru</label>
+                            <select id="editStatus" class="form-select">
+                                <option value="Menunggu">Menunggu</option>
+                                <option value="Diproses">Diproses</option>
+                                <option value="Selesai">Selesai</option>
+                                <option value="Ditolak">Ditolak</option>
+                            </select>
                         </div>
                         <button type="submit" id="btnSave" class="btn btn-success w-100">Simpan Perubahan</button>
                     </form>
@@ -126,7 +110,7 @@
             }
         };
 
-        // Handle Login
+        // Process Login
         document.getElementById('formLogin').addEventListener('submit', async (e) => {
             e.preventDefault();
             const password = document.getElementById('passwordAdmin').value;
@@ -174,46 +158,46 @@
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td class="text-center">${index + 1}</td>
-                    <td><strong>${item.petugas_pengaduan}</strong></td>
-                    <td><small class="text-muted">${item.tanggal_pengaduan}</small><br><strong>${item.nama_pelapor}</strong></td>
-                    <td><strong>${item.judul_laporan}</strong><p class="mb-0 text-muted small">${item.isi_laporan}</p></td>
-                    <td><span class="badge bg-secondary">${item.sumber_laporan}</span></td>
+                    <td><small class="text-muted">${item.timestamp}</small></td>
+                    <td><span class="badge bg-dark">${item.id_laporan}</span></td>
+                    <td><strong>${item.nama_pelapor}</strong></td>
+                    <td>${item.kontak}</td>
+                    <td><span class="badge bg-secondary">${item.kategori}</span></td>
+                    <td>${item.isi_pengaduan}</td>
                     <td class="text-center">
-                        ${item.bukti_pengaduan ? `<a href="${item.bukti_pengaduan}" target="_blank"><img src="${item.bukti_pengaduan}" width="50" class="img-thumbnail"></a>` : '-'}
+                        ${item.link_bukti && item.link_bukti !== '-' ? `<a href="${item.link_bukti}" target="_blank" class="btn btn-sm btn-outline-info">Buka Link</a>` : '-'}
                     </td>
-                    <td><small>${item.tindak_lanjut}</small></td>
-                    <td class="text-center"><span class="badge ${item.status_sp4n_lapor === 'Sudah Entri' ? 'bg-success' : 'bg-warning text-dark'}">${item.status_sp4n_lapor}</span></td>
-                    <td class="text-center"><span class="badge ${item.status_pengaduan === 'Selesai' ? 'bg-success' : 'bg-warning text-dark'}">${item.status_pengaduan}</span></td>
-                    <td class="text-center"><button class="btn btn-sm btn-primary" onclick="openEdit('${item.id}')">Proses</button></td>
+                    <td class="text-center">
+                        <span class="badge ${item.status === 'Selesai' ? 'bg-success' : (item.status === 'Diproses' ? 'bg-info' : (item.status === 'Ditolak' ? 'bg-danger' : 'bg-warning text-dark'))}">
+                            ${item.status}
+                        </span>
+                    </td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-primary" onclick="openEdit('${item.id_laporan}')">Ubah Status</button>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        function openEdit(id) {
-            const item = currentData.find(d => d.id == id);
+        function openEdit(idLaporan) {
+            const item = currentData.find(d => d.id_laporan == idLaporan);
             if (item) {
-                document.getElementById('editId').value = item.id;
-                document.getElementById('editPetugas').value = item.petugas_pengaduan !== '-' ? item.petugas_pengaduan : '';
-                document.getElementById('editTindakLanjut').value = item.tindak_lanjut !== '-' ? item.tindak_lanjut : '';
-                document.getElementById('editSp4n').value = item.status_sp4n_lapor;
-                document.getElementById('editStatus').value = item.status_pengaduan;
+                document.getElementById('editId').value = item.id_laporan;
+                document.getElementById('editStatus').value = item.status;
                 editModal.show();
             }
         }
 
-        document.getElementById('formTindakLanjut').addEventListener('submit', async (e) => {
+        document.getElementById('formStatus').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btnSave = document.getElementById('btnSave');
             btnSave.disabled = true;
 
             const payload = {
                 action: "update",
-                id: document.getElementById('editId').value,
-                petugas_pengaduan: document.getElementById('editPetugas').value,
-                tindak_lanjut: document.getElementById('editTindakLanjut').value,
-                status_sp4n_lapor: document.getElementById('editSp4n').value,
-                status_pengaduan: document.getElementById('editStatus').value
+                id_laporan: document.getElementById('editId').value,
+                status: document.getElementById('editStatus').value
             };
 
             await fetch(API_URL, {
@@ -225,7 +209,7 @@
 
             editModal.hide();
             btnSave.disabled = false;
-            setTimeout(() => loadData(), 1500); // Reload setelah delay sebentar
+            setTimeout(() => loadData(), 1500);
         });
     </script>
 </body>
