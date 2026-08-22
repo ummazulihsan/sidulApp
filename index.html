@@ -7,16 +7,16 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         /* PALET WARNA BPS */
-        :root { 
+        :root {
             --bps-blue: #043277;    /* Biru Utama BPS */
             --bps-orange: #F7941D;  /* Oranye BPS */
             --bps-green: #00A651;   /* Hijau BPS */
-            --bps-light-blue: #0072BC; 
+            --bps-light-blue: #0072BC;
             --background: #f4f7fa;
         }
 
         body { background-color: var(--background); font-family: 'Inter', sans-serif; }
-        
+
         /* Navbar dengan Biru BPS */
         .navbar { background-color: var(--bps-blue); border-bottom: 4px solid var(--bps-orange); }
         .logo-img { height: 55px; width: 55px; border: 2px solid #fff; }
@@ -26,6 +26,21 @@
         .btn-primary:hover { background-color: var(--bps-light-blue); }
 
         .card { border-radius: 8px; border: none; }
+
+        .tracking-box {
+            background-color: #e6f6ee;
+            border: 1px dashed var(--bps-green);
+            border-radius: 8px;
+            padding: 14px 18px;
+        }
+        .tracking-code {
+            font-family: monospace;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--bps-blue);
+            letter-spacing: 1px;
+        }
+        #char-count { font-size: 0.8rem; }
     </style>
 </head>
 <body>
@@ -42,7 +57,7 @@
         </div>
     </nav>
 
-    <div class="container mt-4">
+    <div class="container mt-4 mb-5">
         <div class="row justify-content-center">
             <div class="col-md-8">
                 <div class="card shadow-sm">
@@ -50,20 +65,36 @@
                         <!-- HEADER FORM DENGAN TOMBOL LOGIN (PEMBUKA MODAL) -->
                         <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
                             <h5 class="fw-bold mb-0" style="color: var(--bps-blue)">Formulir Layanan Pengaduan</h5>
-                            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold" data-bs-toggle="modal" data-bs-target="#loginModal">
-                                🔑 Login Admin
-                            </button>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-outline-success btn-sm rounded-pill px-3 fw-bold" data-bs-toggle="modal" data-bs-target="#trackModal">
+                                    🔍 Lacak Status
+                                </button>
+                                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold" data-bs-toggle="modal" data-bs-target="#loginModal">
+                                    🔑 Login Admin
+                                </button>
+                            </div>
                         </div>
 
-                        <form id="formPengaduan">
+                        <form id="formPengaduan" novalidate>
                             <div class="row g-3">
+
+                                <div class="col-12">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="inp-anonim">
+                                        <label class="form-check-label" for="inp-anonim">
+                                            Laporkan secara anonim (nama &amp; kontak tidak wajib diisi)
+                                        </label>
+                                    </div>
+                                </div>
+
                                 <div class="col-md-6">
-                                    <label class="form-label">Nama Lengkap</label>
+                                    <label class="form-label">Nama Lengkap <span id="label-nama-required" class="text-danger">*</span></label>
                                     <input type="text" id="inp-nama" class="form-control shadow-sm" required>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label">Kontak (WA/Email)</label>
+                                    <label class="form-label">Kontak (WA/Email) <span id="label-kontak-required" class="text-danger">*</span></label>
                                     <input type="text" id="inp-kontak" class="form-control shadow-sm" required>
+                                    <small class="text-muted">Kosongkan jika melapor anonim dan tidak ingin dihubungi.</small>
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label">Kategori Laporan</label>
@@ -77,12 +108,13 @@
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label">Deskripsi Aduan</label>
-                                    <textarea id="inp-isi" class="form-control shadow-sm" rows="4" required></textarea>
+                                    <textarea id="inp-isi" class="form-control shadow-sm" rows="5" maxlength="2000" required></textarea>
+                                    <div class="text-end text-muted" id="char-count">0 / 2000</div>
                                 </div>
                                 <div class="col-12 mb-3">
                                     <label class="form-label fw-bold" style="color: var(--bps-blue)">Upload Bukti Otentik (PDF/JPG/PNG)</label>
                                     <input type="file" id="inp-file" class="form-control shadow-sm" accept="image/*,.pdf">
-                                    <small class="text-muted">Maksimal ukuran file: 5MB</small>
+                                    <small class="text-muted">Maksimal ukuran file: 5MB. Bukti bersifat opsional.</small>
                                 </div>
                                 <div class="col-12 text-end">
                                     <button type="submit" id="btn-kirim" class="btn btn-primary px-5 py-2 fw-bold">KIRIM LAPORAN</button>
@@ -91,6 +123,29 @@
                         </form>
                         <div id="notif-form" class="mt-3 d-none"></div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL LACAK STATUS -->
+    <div class="modal fade" id="trackModal" tabindex="-1" aria-labelledby="trackModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header text-white" style="background-color: var(--bps-green);">
+                    <h5 class="modal-title fw-bold" id="trackModalLabel">🔍 Lacak Status Laporan</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="small text-muted">Masukkan kode referensi yang Anda terima saat mengirim laporan (contoh: SIDUL-20260822-AB12X).</p>
+                    <div id="trackResult"></div>
+                    <form id="formLacak">
+                        <div class="mb-3">
+                            <label for="inp-kode-lacak" class="form-label fw-semibold">Kode Referensi</label>
+                            <input type="text" class="form-control text-uppercase" id="inp-kode-lacak" placeholder="SIDUL-20260822-AB12X" required>
+                        </div>
+                        <button type="submit" id="btn-lacak" class="btn btn-success w-100 py-2 fw-bold text-white">CEK STATUS</button>
+                    </form>
                 </div>
             </div>
         </div>
@@ -109,11 +164,11 @@
                     <form id="formLoginAdmin">
                         <div class="mb-3">
                             <label for="loginUsername" class="form-label fw-semibold">Username</label>
-                            <input type="text" class="form-control" id="loginUsername" placeholder="Masukkan username" required>
+                            <input type="text" class="form-control" id="loginUsername" placeholder="Masukkan username" required autocomplete="username">
                         </div>
                         <div class="mb-3">
                             <label for="loginPassword" class="form-label fw-semibold">Password</label>
-                            <input type="password" class="form-control" id="loginPassword" placeholder="Masukkan password" required>
+                            <input type="password" class="form-control" id="loginPassword" placeholder="Masukkan password" required autocomplete="current-password">
                         </div>
                         <button type="submit" class="btn btn-primary w-100 py-2 fw-bold mt-2">MASUK ADMIN</button>
                     </form>
@@ -128,95 +183,241 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // PENTING: URL ini dan proses login di bawah HANYA validasi tampilan (UX).
+        // Perlindungan sesungguhnya harus ada di sisi server (Apps Script) - lihat catatan di admin.html.
         const URL_GAS = 'https://script.google.com/macros/s/AKfycbw0kr3KTbGJT0iYaytTwbZnGfQZdyXFmtmWMg0pg6OEDve9PWN6RX-oX9bcKBBdZ4WFOw/exec';
-        
+        const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
         // --- LOGIKA LOGIN MODAL ---
-        document.getElementById('formLoginAdmin').addEventListener('submit', function(e) {
+        // Password sekarang divalidasi di server (Apps Script), bukan di sini.
+        document.getElementById('formLoginAdmin').addEventListener('submit', async function(e) {
             e.preventDefault();
             const user = document.getElementById('loginUsername').value.trim();
             const pass = document.getElementById('loginPassword').value.trim();
             const alertLogin = document.getElementById('alertLogin');
+            const btnLogin = this.querySelector('button[type="submit"]');
 
-            // Akun Default (Bisa disesuaikan)
-            if (user === "admin" && pass === "admin123") {
-                sessionStorage.setItem('isAdminLoggedIn', 'true');
-                window.location.href = 'admin.html';
-            } else {
-                alertLogin.innerText = "Username atau Password salah!";
+            alertLogin.classList.add('d-none');
+            btnLogin.disabled = true;
+            btnLogin.innerText = "Memeriksa...";
+
+            try {
+                const response = await fetch(URL_GAS, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'login', username: user, password: pass })
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    sessionStorage.setItem('isAdminLoggedIn', 'true');
+                    sessionStorage.setItem('adminLoginTime', Date.now().toString());
+                    sessionStorage.setItem('adminToken', result.token);
+                    window.location.href = 'admin.html';
+                } else {
+                    alertLogin.innerText = result.error || "Username atau Password salah!";
+                    alertLogin.classList.remove('d-none');
+                }
+            } catch (err) {
+                console.error(err);
+                alertLogin.innerText = "Gagal terhubung ke server. Coba lagi.";
                 alertLogin.classList.remove('d-none');
+            } finally {
+                btnLogin.disabled = false;
+                btnLogin.innerText = "MASUK ADMIN";
             }
         });
+
+        // --- LOGIKA LACAK STATUS ---
+        const STATUS_LABEL_MAP = {
+            'menunggu': { label: 'Menunggu', color: '#495057', bg: '#dee2e6' },
+            'proses': { label: 'Sedang Diproses', color: 'var(--bps-orange)', bg: '#fff4e5' },
+            'selesai': { label: 'Selesai Ditangani', color: 'var(--bps-green)', bg: '#e6f6ee' }
+        };
+
+        document.getElementById('formLacak').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const kode = document.getElementById('inp-kode-lacak').value.trim().toUpperCase();
+            const hasil = document.getElementById('trackResult');
+            const btnLacak = document.getElementById('btn-lacak');
+
+            if (!kode) return;
+
+            btnLacak.disabled = true;
+            btnLacak.innerText = "Mencari...";
+            hasil.innerHTML = '';
+
+            try {
+                const response = await fetch(`${URL_GAS}?trackingCode=${encodeURIComponent(kode)}`);
+                const result = await response.json();
+
+                if (!result.found) {
+                    hasil.innerHTML = `<div class="alert alert-warning">Kode referensi tidak ditemukan. Periksa kembali penulisannya.</div>`;
+                } else {
+                    const st = (result.status || 'menunggu').toLowerCase();
+                    const info = STATUS_LABEL_MAP[st] || STATUS_LABEL_MAP['menunggu'];
+                    const tgl = result.timestamp ? new Date(result.timestamp).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }) : '-';
+                    hasil.innerHTML = `
+                        <div class="tracking-box mb-3" style="background-color: ${info.bg}; border-color: ${info.color};">
+                            <div class="small text-muted mb-1">Kategori: ${result.kategori || '-'} &middot; Dilaporkan: ${tgl}</div>
+                            <div class="fw-bold" style="color: ${info.color}; font-size: 1.1rem;">${info.label}</div>
+                        </div>
+                    `;
+                }
+            } catch (err) {
+                console.error(err);
+                hasil.innerHTML = `<div class="alert alert-danger">Gagal terhubung ke server. Coba lagi nanti.</div>`;
+            } finally {
+                btnLacak.disabled = false;
+                btnLacak.innerText = "CEK STATUS";
+            }
+        });
+
+        // --- TOGGLE MODE ANONIM ---
+        const chkAnonim = document.getElementById('inp-anonim');
+        const inpNama = document.getElementById('inp-nama');
+        const inpKontak = document.getElementById('inp-kontak');
+        const lblNamaReq = document.getElementById('label-nama-required');
+        const lblKontakReq = document.getElementById('label-kontak-required');
+
+        chkAnonim.addEventListener('change', function() {
+            const anon = chkAnonim.checked;
+            inpNama.required = !anon;
+            inpKontak.required = !anon;
+            lblNamaReq.classList.toggle('d-none', anon);
+            lblKontakReq.classList.toggle('d-none', anon);
+            if (anon) {
+                inpNama.placeholder = 'Anonim';
+                inpKontak.placeholder = '(tidak wajib)';
+            } else {
+                inpNama.placeholder = '';
+                inpKontak.placeholder = '';
+            }
+        });
+
+        // --- COUNTER KARAKTER ---
+        const inpIsi = document.getElementById('inp-isi');
+        const charCount = document.getElementById('char-count');
+        inpIsi.addEventListener('input', function() {
+            charCount.innerText = `${inpIsi.value.length} / 2000`;
+        });
+
+        // --- VALIDASI UKURAN FILE SAAT DIPILIH ---
+        const fileInput = document.getElementById('inp-file');
+        fileInput.addEventListener('change', function() {
+            const f = fileInput.files[0];
+            if (f && f.size > MAX_FILE_SIZE) {
+                showNotif('warning', 'Ukuran file melebihi 5MB. Silakan pilih file lain.');
+                fileInput.value = '';
+            }
+        });
+
+        function showNotif(type, message) {
+            const notifForm = document.getElementById('notif-form');
+            notifForm.className = `alert alert-${type} mt-3 d-block`;
+            notifForm.innerHTML = message;
+            window.scrollTo(0, 0);
+        }
+
+        function generateTrackingCode() {
+            const now = new Date();
+            const ymd = now.toISOString().slice(0,10).replace(/-/g, '');
+            const rand = Array.from({length: 8}, () =>
+                'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 33)]
+            ).join('');
+            return `SIDUL-${ymd}-${rand}`;
+        }
 
         // --- LOGIKA FORM PENGADUAN ---
         const form = document.getElementById('formPengaduan');
-        const fileInput = document.getElementById('inp-file');
         const btnSubmit = document.getElementById('btn-kirim');
         const notifForm = document.getElementById('notif-form');
-        
+
         form.addEventListener('submit', function(e) {
             e.preventDefault();
-            
-            const nama = document.getElementById('inp-nama').value.trim();
-            const kontak = document.getElementById('inp-kontak').value.trim();
+
+            const anon = chkAnonim.checked;
+            const nama = anon ? 'Anonim' : inpNama.value.trim();
+            const kontak = anon ? (inpKontak.value.trim() || '-') : inpKontak.value.trim();
             const kategori = document.getElementById('inp-kategori').value;
-            const isi = document.getElementById('inp-isi').value.trim();
+            const isi = inpIsi.value.trim();
             const file = fileInput.files[0];
-            
-            if (!nama || !kontak || !kategori || !isi || !file) {
-                notifForm.className = "alert alert-warning mt-3 d-block";
-                notifForm.innerHTML = "<strong>Peringatan!</strong> Semua kolom dan bukti otentik wajib diisi/diupload.";
-                window.scrollTo(0, 0); 
+
+            if ((!anon && (!nama || !kontak)) || !kategori || !isi) {
+                showNotif('warning', '<strong>Peringatan!</strong> Kolom wajib (bertanda *) harus diisi.');
                 return;
             }
-            
+
+            if (file && file.size > MAX_FILE_SIZE) {
+                showNotif('warning', '<strong>Peringatan!</strong> Ukuran file bukti melebihi 5MB.');
+                return;
+            }
+
+            const trackingCode = generateTrackingCode();
+
             btnSubmit.disabled = true;
             btnSubmit.innerText = "Sedang Memproses...";
-            notifForm.className = "alert alert-info mt-3";
-            notifForm.innerText = "Mohon tunggu, sedang mengupload laporan dan bukti...";
-            notifForm.classList.remove('d-none');
-            
-            const reader = new FileReader();
-            reader.onload = function(event) {
+            showNotif('info', 'Mohon tunggu, sedang mengupload laporan dan bukti...');
+
+            const kirim = (fileData, fileName, fileType) => {
                 const payload = {
-                    nama: nama,
-                    kontak: kontak,
-                    kategori: kategori,
-                    isi: isi,
-                    fileData: event.target.result,
-                    fileName: file.name,
-                    fileType: file.type
+                    nama, kontak, kategori, isi,
+                    anonim: anon,
+                    trackingCode,
+                    fileData: fileData || null,
+                    fileName: fileName || null,
+                    fileType: fileType || null
                 };
-                eksekusiKirim(payload);
+                eksekusiKirim(payload, trackingCode);
             };
-            
-            reader.onerror = function() {
-                alert("Gagal membaca file bukti.");
-                resetTombol();
-            };
-            
-            reader.readAsDataURL(file);
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => kirim(event.target.result, file.name, file.type);
+                reader.onerror = () => {
+                    showNotif('danger', 'Gagal membaca file bukti. Silakan coba lagi.');
+                    resetTombol();
+                };
+                reader.readAsDataURL(file);
+            } else {
+                kirim(null, null, null);
+            }
         });
-        
-        function eksekusiKirim(payload) {
+
+        function eksekusiKirim(payload, trackingCode) {
+            // Tidak lagi memakai mode 'no-cors' agar kita bisa membaca balasan
+            // asli dari server (berhasil/gagal, dan ID laporan yang tersimpan).
             fetch(URL_GAS, {
                 method: 'POST',
-                mode: 'no-cors',
                 body: JSON.stringify(payload)
             })
-            .then(() => {
-                notifForm.className = "alert alert-success mt-3";
-                notifForm.innerHTML = "<strong>Berhasil!</strong> Laporan Anda telah tersimpan ke sistem SiDul.";
+            .then(res => res.json())
+            .then(result => {
+                if (!result.success) {
+                    showNotif('danger', `<strong>Gagal!</strong> ${result.error || 'Laporan tidak dapat disimpan. Coba lagi.'}`);
+                    resetTombol();
+                    return;
+                }
+                const idFinal = result.reportId || trackingCode;
+                showNotif('success', `
+                    <strong>Berhasil!</strong> Laporan Anda telah dikirim ke sistem SiDul.
+                    <div class="tracking-box mt-3">
+                        Kode referensi laporan Anda:<br>
+                        <span class="tracking-code">${idFinal}</span>
+                        <div class="small text-muted mt-1">Simpan kode ini untuk keperluan Anda sendiri.</div>
+                    </div>
+                `);
                 form.reset();
+                charCount.innerText = '0 / 2000';
+                chkAnonim.dispatchEvent(new Event('change'));
                 resetTombol();
             })
             .catch(err => {
                 console.error("Error:", err);
-                notifForm.className = "alert alert-danger mt-3";
-                notifForm.innerText = "Terjadi kesalahan saat mengirim. Pastikan internet stabil.";
+                showNotif('danger', 'Terjadi kesalahan saat mengirim. Pastikan internet stabil dan coba lagi.');
                 resetTombol();
             });
         }
-        
+
         function resetTombol() {
             btnSubmit.disabled = false;
             btnSubmit.innerText = "KIRIM LAPORAN";
