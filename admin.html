@@ -6,8 +6,8 @@
     <title>Dashboard Admin - SiDul BPS</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        :root { 
-            --bps-blue: #043277; 
+        :root {
+            --bps-blue: #043277;
             --bps-orange: #F7941D;
             --bps-green: #00A651;
             --background: #f4f7fa;
@@ -23,6 +23,9 @@
         .bg-selesai { background-color: #e6f6ee; color: var(--bps-green); border: 1px solid var(--bps-green); }
 
         .table-bps { background-color: var(--bps-blue); color: white; }
+
+        .summary-card { border-radius: 8px; border: none; }
+        .summary-num { font-size: 1.8rem; font-weight: 800; }
     </style>
 </head>
 <body>
@@ -37,11 +40,64 @@
         </div>
     </nav>
 
-    <div class="container mt-4">
+    <div class="container mt-4 mb-5">
+
+        <div class="row g-3 mb-3">
+            <div class="col-6 col-md-3">
+                <div class="card summary-card shadow-sm text-center p-3">
+                    <div class="summary-num" style="color: var(--bps-blue)" id="sum-total">0</div>
+                    <div class="small text-muted">Total Laporan</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card summary-card shadow-sm text-center p-3">
+                    <div class="summary-num" style="color:#495057" id="sum-baru">0</div>
+                    <div class="small text-muted">Baru</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card summary-card shadow-sm text-center p-3">
+                    <div class="summary-num" style="color: var(--bps-orange)" id="sum-proses">0</div>
+                    <div class="small text-muted">Proses</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card summary-card shadow-sm text-center p-3">
+                    <div class="summary-num" style="color: var(--bps-green)" id="sum-selesai">0</div>
+                    <div class="small text-muted">Selesai</div>
+                </div>
+            </div>
+        </div>
+
         <div class="card shadow-sm">
-            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                <h5 class="mb-0 fw-bold" style="color: var(--bps-blue)">📊 Dashboard Monitoring Data Pengaduan</h5>
-                <button class="btn btn-sm btn-outline-primary" onclick="ambilDataDashboard()">Segarkan Data</button>
+            <div class="card-header bg-white py-3">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h5 class="mb-0 fw-bold" style="color: var(--bps-blue)">📊 Dashboard Monitoring Data Pengaduan</h5>
+                    <button class="btn btn-sm btn-outline-primary" onclick="ambilDataDashboard()">Segarkan Data</button>
+                </div>
+                <div class="row g-2 mt-2">
+                    <div class="col-md-6">
+                        <input type="text" id="inp-search" class="form-control form-control-sm" placeholder="Cari nama, isi aduan, atau ID laporan...">
+                    </div>
+                    <div class="col-md-3">
+                        <select id="filter-kategori" class="form-select form-select-sm">
+                            <option value="">Semua Kategori</option>
+                            <option value="Fraud">Fraud</option>
+                            <option value="Kepegawaian">Kepegawaian</option>
+                            <option value="Konflik Kepentingan">Konflik Kepentingan</option>
+                            <option value="Pelayanan Statistik">Pelayanan Statistik</option>
+                            <option value="Lainnya">Lainnya</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select id="filter-status" class="form-select form-select-sm">
+                            <option value="">Semua Status</option>
+                            <option value="baru">Baru</option>
+                            <option value="proses">Proses</option>
+                            <option value="selesai">Selesai</option>
+                        </select>
+                    </div>
+                </div>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -69,68 +125,198 @@
     </footer>
 
     <script>
-        // Cek apakah sudah login
-        if (sessionStorage.getItem('isAdminLoggedIn') !== 'true') {
-            alert('Akses ditolak! Silakan login terlebih dahulu.');
+        // Login dan akses data sekarang divalidasi di server (Code.gs):
+        // - Password dicocokkan lewat hash di Apps Script, bukan di JS ini.
+        // - doGet hanya mengembalikan data jika token admin yang valid disertakan.
+        // Pengecekan sessionStorage di bawah ini murni untuk UX (agar halaman
+        // langsung redirect bila sesi habis), bukan lapisan keamanan utama.
+
+        const SESSION_MAX_AGE_MS = 2 * 60 * 60 * 1000; // 2 jam
+
+        function isSessionValid() {
+            if (sessionStorage.getItem('isAdminLoggedIn') !== 'true') return false;
+            if (!sessionStorage.getItem('adminToken')) return false;
+            const loginTime = parseInt(sessionStorage.getItem('adminLoginTime') || '0', 10);
+            if (!loginTime || (Date.now() - loginTime) > SESSION_MAX_AGE_MS) return false;
+            return true;
+        }
+
+        if (!isSessionValid()) {
+            sessionStorage.removeItem('isAdminLoggedIn');
+            sessionStorage.removeItem('adminLoginTime');
+            sessionStorage.removeItem('adminToken');
+            alert('Akses ditolak atau sesi telah berakhir! Silakan login kembali.');
             window.location.href = 'index.html';
         }
 
+        const ADMIN_TOKEN = sessionStorage.getItem('adminToken');
+
         function logout() {
             sessionStorage.removeItem('isAdminLoggedIn');
+            sessionStorage.removeItem('adminLoginTime');
+            sessionStorage.removeItem('adminToken');
             window.location.href = 'index.html';
         }
 
         const URL_GAS = 'https://script.google.com/macros/s/AKfycbw0kr3KTbGJT0iYaytTwbZnGfQZdyXFmtmWMg0pg6OEDve9PWN6RX-oX9bcKBBdZ4WFOw/exec';
         const tabelBody = document.getElementById('tabel-body');
+        let semuaData = [];
+
+        // Mencegah stored XSS: jangan pernah masukkan teks dari server
+        // langsung ke innerHTML tanpa di-escape terlebih dahulu.
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function isUrlAman(url) {
+            // Hanya izinkan link bukti berupa http/https agar tidak ada javascript: URL
+            return typeof url === 'string' && /^https?:\/\//i.test(url);
+        }
 
         async function ambilDataDashboard() {
             tabelBody.innerHTML = '<tr><td colspan="5" class="py-5 text-center"><div class="spinner-border text-primary" role="status"></div><br>Menghubungkan ke server BPS...</td></tr>';
-            
+
             try {
-                const response = await fetch(URL_GAS);
+                const response = await fetch(`${URL_GAS}?token=${encodeURIComponent(ADMIN_TOKEN)}`);
                 const data = await response.json();
-                
-                tabelBody.innerHTML = '';
-                
-                if (!data || data.length === 0) {
-                    tabelBody.innerHTML = '<tr><td colspan="5" class="py-5 text-center text-muted">Belum ada data pengaduan masuk.</td></tr>';
+
+                if (data && data.error === 'Unauthorized') {
+                    alert('Sesi admin tidak valid. Silakan login kembali.');
+                    logout();
                     return;
                 }
-                
-                data.reverse().forEach(item => {
-                    const tgl = new Date(item.timestamp).toLocaleDateString('id-ID', {
-                        day: '2-digit', month: 'short', year: 'numeric'
-                    });
-                    
-                    let badgeClass = 'bg-baru';
-                    const st = item.status ? item.status.toLowerCase() : '';
-                    if(st === 'proses') badgeClass = 'bg-proses';
-                    if(st === 'selesai') badgeClass = 'bg-selesai';
-                    
-                    const linkBukti = (item.bukti && item.bukti !== "Tidak ada bukti") 
-                        ? `<a href="${item.bukti}" target="_blank" class="btn btn-sm btn-outline-secondary mt-1">📂 Lihat Bukti</a>` 
-                        : '<span class="text-muted small d-block mt-1">Tanpa Bukti</span>';
 
-                    const baris = `
-                        <tr>
-                            <td class="fw-bold ps-3 text-center">${item.reportId}</td>
-                            <td class="text-center">${tgl}</td>
-                            <td><span class="badge text-dark border">${item.kategori}</span></td>
-                            <td>
-                                <div class="small fw-bold mb-1">${item.isiAduan}</div>
-                                ${linkBukti}
-                            </td>
-                            <td class="text-center"><span class="status-badge ${badgeClass}">${item.status || 'Menunggu'}</span></td>
-                        </tr>
-                    `;
-                    tabelBody.innerHTML += baris;
-                });
-
+                semuaData = Array.isArray(data) ? data.slice().reverse() : [];
+                renderTabel();
+                updateRingkasan();
             } catch (error) {
                 console.error("Dashboard Error:", error);
                 tabelBody.innerHTML = '<tr><td colspan="5" class="py-5 text-center text-danger">Gagal memuat dashboard. Pastikan Apps Script sudah di-deploy sebagai "Anyone".</td></tr>';
             }
         }
+
+        function updateRingkasan() {
+            const total = semuaData.length;
+            let baru = 0, proses = 0, selesai = 0;
+            semuaData.forEach(item => {
+                const st = (item.status || 'baru').toLowerCase();
+                if (st === 'proses') proses++;
+                else if (st === 'selesai') selesai++;
+                else baru++;
+            });
+            document.getElementById('sum-total').innerText = total;
+            document.getElementById('sum-baru').innerText = baru;
+            document.getElementById('sum-proses').innerText = proses;
+            document.getElementById('sum-selesai').innerText = selesai;
+        }
+
+        function renderTabel() {
+            const q = (document.getElementById('inp-search').value || '').toLowerCase().trim();
+            const fKategori = document.getElementById('filter-kategori').value;
+            const fStatus = document.getElementById('filter-status').value;
+
+            const filtered = semuaData.filter(item => {
+                const st = (item.status || 'baru').toLowerCase();
+                if (fKategori && item.kategori !== fKategori) return false;
+                if (fStatus && st !== fStatus) return false;
+                if (q) {
+                    const haystack = `${item.nama || ''} ${item.isiAduan || ''} ${item.reportId || ''}`.toLowerCase();
+                    if (!haystack.includes(q)) return false;
+                }
+                return true;
+            });
+
+            tabelBody.innerHTML = '';
+
+            if (filtered.length === 0) {
+                tabelBody.innerHTML = '<tr><td colspan="5" class="py-5 text-center text-muted">Tidak ada data pengaduan yang cocok.</td></tr>';
+                return;
+            }
+
+            filtered.forEach(item => {
+                const tgl = item.timestamp ? new Date(item.timestamp).toLocaleDateString('id-ID', {
+                    day: '2-digit', month: 'short', year: 'numeric'
+                }) : '-';
+
+                let badgeClass = 'bg-baru';
+                const st = item.status ? item.status.toLowerCase() : '';
+                if (st === 'proses') badgeClass = 'bg-proses';
+                if (st === 'selesai') badgeClass = 'bg-selesai';
+
+                const linkBukti = (item.bukti && item.bukti !== "Tidak ada bukti" && isUrlAman(item.bukti))
+                    ? `<a href="${escapeHtml(item.bukti)}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary mt-1">📂 Lihat Bukti</a>`
+                    : '<span class="text-muted small d-block mt-1">Tanpa Bukti</span>';
+
+                const baris = `
+                    <tr>
+                        <td class="fw-bold ps-3 text-center">${escapeHtml(item.reportId)}</td>
+                        <td class="text-center">${escapeHtml(tgl)}</td>
+                        <td><span class="badge text-dark border">${escapeHtml(item.kategori)}</span></td>
+                        <td>
+                            <div class="small fw-bold mb-1">${escapeHtml(item.isiAduan)}</div>
+                            ${item.nama ? `<div class="small text-muted">Pelapor: ${escapeHtml(item.nama)}</div>` : ''}
+                            ${linkBukti}
+                        </td>
+                        <td class="text-center">
+                            <span class="status-badge ${badgeClass} d-block mb-1">${escapeHtml(item.status || 'Menunggu')}</span>
+                            <select class="form-select form-select-sm status-select" data-report-id="${escapeHtml(item.reportId)}">
+                                <option value="Menunggu" ${st === 'menunggu' || !st ? 'selected' : ''}>Menunggu</option>
+                                <option value="Proses" ${st === 'proses' ? 'selected' : ''}>Proses</option>
+                                <option value="Selesai" ${st === 'selesai' ? 'selected' : ''}>Selesai</option>
+                            </select>
+                        </td>
+                    </tr>
+                `;
+                tabelBody.innerHTML += baris;
+            });
+
+            document.querySelectorAll('.status-select').forEach(sel => {
+                sel.addEventListener('change', onUbahStatus);
+            });
+        }
+
+        async function onUbahStatus(e) {
+            const select = e.target;
+            const reportId = select.dataset.reportId;
+            const newStatus = select.value;
+            select.disabled = true;
+
+            try {
+                const response = await fetch(URL_GAS, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'updateStatus',
+                        token: ADMIN_TOKEN,
+                        reportId: reportId,
+                        status: newStatus
+                    })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    const item = semuaData.find(d => d.reportId === reportId);
+                    if (item) item.status = newStatus;
+                    renderTabel();
+                    updateRingkasan();
+                } else {
+                    alert('Gagal mengubah status: ' + (result.error || 'kesalahan tidak diketahui'));
+                    select.disabled = false;
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Gagal terhubung ke server saat mengubah status.');
+                select.disabled = false;
+            }
+        }
+
+        document.getElementById('inp-search').addEventListener('input', renderTabel);
+        document.getElementById('filter-kategori').addEventListener('change', renderTabel);
+        document.getElementById('filter-status').addEventListener('change', renderTabel);
 
         window.onload = ambilDataDashboard;
     </script>
